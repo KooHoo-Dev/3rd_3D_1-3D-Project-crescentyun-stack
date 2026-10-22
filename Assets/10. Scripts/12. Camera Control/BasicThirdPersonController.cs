@@ -79,6 +79,10 @@ namespace Study3D.CameraControl
             cameraTransform.localPosition = new Vector3(0f, 0f, -distance);
         }
         
+        
+        
+        
+        
         private void LockCursor()
         {
             Cursor.visible = false;
