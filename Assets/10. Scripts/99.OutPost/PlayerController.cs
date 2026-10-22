@@ -38,6 +38,7 @@ namespace Study3D.OutPost
         private static readonly int RollXHash = Animator.StringToHash("RollX");
         private static readonly int RollZHash = Animator.StringToHash("RollZ");
         private static readonly int RollStateHash = Animator.StringToHash("Roll");   // State 이름
+        private static readonly int ReloadHash = Animator.StringToHash("Reload");
         
         private bool isRolling;
         private float rollTimer;
@@ -195,7 +196,8 @@ namespace Study3D.OutPost
         private void UpdateGunInput()
         {
             // 재장전 (R)
-            if (SimpleInput.GetKeyDown(Key.R)) gun.RequestReload();
+            if (SimpleInput.GetKeyDown(Key.R) && gun.RequestReload())
+                animator.SetTrigger(ReloadHash);
 
             // 사격 (왼쪽 버튼을 누르고 있는 동안 연사)
             if (!SimpleInput.GetMouseButton(SimpleInput.MouseButton.Left)) return;
