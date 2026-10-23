@@ -1,4 +1,5 @@
 ﻿
+using System;
 using Study.Utilities;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -74,7 +75,14 @@ namespace Study3D.OutPost
         private bool isRunning;
         
         private Camera cam;
-         
+
+        public static PlayerController Instance { get; private set; }
+        
+        private void Awake()
+        {
+            Instance = this;
+        }
+
 
         private void Start()
         {
@@ -281,6 +289,12 @@ namespace Study3D.OutPost
         }
         
         #endregion
+        
+        private void OnDestroy()
+        {
+            if (Instance == this) Instance = null;
+        }
+        
         
         
         private void ConfineCursor()

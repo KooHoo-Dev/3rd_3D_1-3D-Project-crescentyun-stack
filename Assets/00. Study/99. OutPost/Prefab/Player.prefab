@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 6004192804841876053}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -132,10 +132,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.Gun
   magazineSize: 30
   reserveAmmo: 90
-  reloadTime: 2
+  reloadTime: 3
   fireInterval: 0.1
   muzzle: {fileID: 6355282793685226902}
   bulletPrefab: {fileID: 5535052479164170891, guid: c5161a11a66298a4f8cfa1f943fafd3e, type: 3}
+  damage: 10
 --- !u!1 &5598612494114871457
 GameObject:
   m_ObjectHideFlags: 0
