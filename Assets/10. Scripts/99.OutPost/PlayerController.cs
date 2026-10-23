@@ -34,11 +34,16 @@ namespace Study3D.OutPost
         [SerializeField] private float rollDistance = 4f;    // 구르는 거리 (m)
         [SerializeField] private float rollDuration = 0.7f;  // 구르는 시간 (초), 클립 길이에 맞춰 조절
 
+        
+        private int upperBodyLayer;   // UpperBody 레이어 번호
+        
         private static readonly int RollHash  = Animator.StringToHash("Roll");
         private static readonly int RollXHash = Animator.StringToHash("RollX");
         private static readonly int RollZHash = Animator.StringToHash("RollZ");
         private static readonly int RollStateHash = Animator.StringToHash("Roll");   // State 이름
         private static readonly int ReloadHash = Animator.StringToHash("Reload");
+        private static readonly int EmptyStateHash = Animator.StringToHash("Empty");   // UpperBody 레이어의 빈 상태
+        private static readonly int FireStateHash = Animator.StringToHash("Fire");   // UpperBody 레이어의 사격 상태
         
         private bool isRolling;
         private float rollTimer;
@@ -73,6 +78,7 @@ namespace Study3D.OutPost
 
         private void Start()
         {
+            upperBodyLayer = animator.GetLayerIndex("UpperBody");   // 레이어 이름으로 번호 찾기
             aimDirection = transform.forward;   // 커서 계산 전에도 0벡터가 되지 않도록
             cam = cameraTransform.GetComponent<Camera>();
             animator = GetComponentInChildren<Animator>();
@@ -195,10 +201,13 @@ namespace Study3D.OutPost
 
         private void UpdateGunInput()
         {
-            // 재장전 (R)
-            if (SimpleInput.GetKeyDown(Key.R) && gun.RequestReload())
-                animator.SetTrigger(ReloadHash);
+            // 달리기 시작하면 재장전 취소
+            if (isRunning) CancelReload();
 
+            // 재장전 (R) — 달리는 중에는 시작하지 않음
+            if (SimpleInput.GetKeyDown(Key.R) && !isRunning && gun.RequestReload())
+                animator.SetTrigger(ReloadHash);
+            
             // 사격 (왼쪽 버튼을 누르고 있는 동안 연사)
             if (!SimpleInput.GetMouseButton(SimpleInput.MouseButton.Left)) return;
             if (!CanFire()) return;
@@ -207,9 +216,22 @@ namespace Study3D.OutPost
             
             Debug.DrawRay(transform.position + Vector3.up, aimDirection * 5f, Color.red);
             
-            gun.TryFire(aimDirection);
+            // 실제로 발사됐을 때만 사격 모션을 처음(0)부터 재생
+            if (gun.TryFire(aimDirection))
+                animator.Play(FireStateHash, upperBodyLayer, 0f);
             
         }
+        
+        // 재장전 로직과 애니메이션을 함께 끊습니다.
+        private void CancelReload()
+        {
+            if (!gun.IsReloading) return;
+
+            gun.CancelReload();
+            animator.ResetTrigger(ReloadHash);                         // 남아있는 트리거 제거
+            animator.CrossFade(EmptyStateHash, 0.1f, upperBodyLayer);  // 상체를 0.1초 만에 Empty로
+        }
+        
         
         #endregion
         
@@ -217,6 +239,7 @@ namespace Study3D.OutPost
         
         private void TryStartRoll()
         {
+           
             if (isRolling) return;
             if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash == RollStateHash) return;   
             if (!SimpleInput.GetKeyDown(Key.Space)) return;
@@ -236,6 +259,7 @@ namespace Study3D.OutPost
             animator.SetFloat(RollZHash, snapped.z);
             animator.SetTrigger(RollHash);
 
+            CancelReload();
             isRolling = true;
             rollTimer = 0f;
         }

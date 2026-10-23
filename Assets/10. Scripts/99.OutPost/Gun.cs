@@ -17,7 +17,6 @@ namespace Study3D.OutPost
         [SerializeField] private float damage = 10f;
         
         // 내부변수
-
         private int currentAmmo;
         private bool isReloading;
         private float nextFireTime;
@@ -81,7 +80,13 @@ namespace Study3D.OutPost
             return true;
         }
         
-        
+        // 재장전을 중단합니다. 탄은 채워지지 않습니다.
+        public void CancelReload()
+        {
+            if (!isReloading) return;
+            isReloading = false;
+            Debug.Log("재장전 취소");
+        }
 
     }
 }
