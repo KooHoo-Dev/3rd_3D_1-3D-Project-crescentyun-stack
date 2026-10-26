@@ -26366,6 +26366,20 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!114 &579928746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 579928738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce7354c903cb4288be0eff3bb02efe7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.PlayerHealth
+  maxHp: 100
+  animator: {fileID: 0}
 --- !u!1001 &580031024
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -61079,6 +61093,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5230584590597379143, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
       insertIndex: -1
       addedObject: {fileID: 579928742}
+    - targetCorrespondingSourceObject: {fileID: 5230584590597379143, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 579928746}
   m_SourcePrefab: {fileID: 100100000, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
 --- !u!1001 &1328785101
 PrefabInstance:
@@ -90935,6 +90952,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: Zombie02
       objectReference: {fileID: 0}
+    - target: {fileID: 4186634407167106132, guid: 0a483975070bb614b9516974181480d1, type: 3}
+      propertyPath: moveSpeed
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4186634407167106132, guid: 0a483975070bb614b9516974181480d1, type: 3}
+      propertyPath: attackHitTime
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 4186634407167106132, guid: 0a483975070bb614b9516974181480d1, type: 3}
+      propertyPath: attackDuration
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8855330362749078211, guid: 0a483975070bb614b9516974181480d1, type: 3}
+      propertyPath: m_Acceleration
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 8855330362749078211, guid: 0a483975070bb614b9516974181480d1, type: 3}
+      propertyPath: m_StoppingDistance
+      value: 2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -91257,6 +91294,18 @@ PrefabInstance:
     - target: {fileID: 2521573014553406602, guid: bf027fc426e91594f87b5af7c4b4e69e, type: 3}
       propertyPath: m_Name
       value: Zombie01
+      objectReference: {fileID: 0}
+    - target: {fileID: 3105415503284684609, guid: bf027fc426e91594f87b5af7c4b4e69e, type: 3}
+      propertyPath: moveSpeed
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3105415503284684609, guid: bf027fc426e91594f87b5af7c4b4e69e, type: 3}
+      propertyPath: attackHitTime
+      value: 0.9
+      objectReference: {fileID: 0}
+    - target: {fileID: 3105415503284684609, guid: bf027fc426e91594f87b5af7c4b4e69e, type: 3}
+      propertyPath: attackDuration
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 6209654887574691215, guid: bf027fc426e91594f87b5af7c4b4e69e, type: 3}
       propertyPath: m_LocalPosition.x

@@ -8,7 +8,7 @@ using UnityEngine.EventSystems;
 using TMPro;
 #endif
 
-namespace Study.OutPost
+namespace Study3D.OutPost
 {
     /// <summary>
     /// 메인 HUD를 코드로 조립하는 에디터 전용 빌더.

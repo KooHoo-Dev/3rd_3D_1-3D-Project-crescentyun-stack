@@ -295,8 +295,6 @@ namespace Study3D.OutPost
             if (Instance == this) Instance = null;
         }
         
-        
-        
         private void ConfineCursor()
         {
             Cursor.visible = true;
