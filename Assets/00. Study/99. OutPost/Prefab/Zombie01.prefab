@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6209654887574691215}
-  - component: {fileID: 221220994500556264}
   - component: {fileID: 3105415503284684609}
   - component: {fileID: 9052619276725766189}
   - component: {fileID: 1897932355099291439}
@@ -36,19 +35,6 @@ Transform:
   - {fileID: 4889069210979240113}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &221220994500556264
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2521573014553406602}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8d3980e7d59e4c169cb68ac34a33e7ea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.TestTarget
-  maxHp: 100
 --- !u!114 &3105415503284684609
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,6 +58,17 @@ MonoBehaviour:
   obstacleMask:
     serializedVersion: 2
     m_Bits: 0
+  loseSightTime: 5
+  attackRange: 1.5
+  attackDuration: 2.2
+  attackHitTime: 0.8
+  attackCooldown: 0.5
+  attackAngle: 60
+  attackDamage: 10
+  turnSpeed: 360
+  patrolRadius: 6
+  minStayTime: 2
+  maxStayTime: 4
 --- !u!195 &9052619276725766189
 NavMeshAgent:
   m_ObjectHideFlags: 0

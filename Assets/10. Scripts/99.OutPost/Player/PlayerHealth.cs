@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Study.OutPost;
+using UnityEngine;
 
 namespace Study3D.OutPost
 {
@@ -14,16 +15,19 @@ namespace Study3D.OutPost
         private Vector3 startPos;
         private Quaternion startRot;
         
-        
         private float hp;
         private PlayerController controller;
 
-
-
         private static readonly int DeadHash = Animator.StringToHash("Dead");
 
+        public event System.Action OnDied;   
         public bool IsDead => hp <= 0f;
 
+        public event System.Action<float, float> OnHpChanged;   // (현재 HP, 최대 HP)
+        public float Hp => hp;
+        public float MaxHp => maxHp;
+        
+        
         private void Awake()
         {
             hp = maxHp;
@@ -43,14 +47,13 @@ namespace Study3D.OutPost
                 return;
             }
 
-            hp -= damage;
+     
+            hp = Mathf.Max(hp - damage, 0f);
+            OnHpChanged?.Invoke(hp, maxHp);
             Debug.Log($"플레이어 피격! -{damage} (남은 HP: {hp})");
+            
+            if (hp <= 0f) Die();
 
-            if (hp <= 0f)
-            {
-                hp = 0f;
-                Die();
-            }
         }
 
         private void Die()
@@ -60,6 +63,9 @@ namespace Study3D.OutPost
             if (controller != null) controller.enabled = false;                 // 조작 막기
 
             Debug.Log("플레이어 사망");
+            OnDied?.Invoke();
+           
+            
         }
         
         [ContextMenu("Respawn")]
@@ -68,7 +74,8 @@ namespace Study3D.OutPost
             if (!IsDead) return;
 
             hp = maxHp;
-
+            OnHpChanged?.Invoke(hp, maxHp);
+            
             // 위치: 리스폰 지점이 있으면 거기로, 없으면 시작 위치로
             if (respawnPoint != null)
                 transform.SetPositionAndRotation(respawnPoint.position, respawnPoint.rotation);
@@ -80,8 +87,9 @@ namespace Study3D.OutPost
             animator.Update(0f);
 
             if (controller != null) controller.enabled = true;
-
+            
             Debug.Log("리스폰");
+           
         }
         
         

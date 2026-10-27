@@ -27,6 +27,23 @@ namespace Study3D.OutPost
         [SerializeField] private float moveSpeed = 3f;
         [SerializeField] private float runSpeed = 7f;
         
+        
+        [Header("스태미나")]
+        [SerializeField] private float maxStamina = 100f;
+        [SerializeField] private float runStaminaCost = 50f;   // 달릴 때 초당 소모
+        [SerializeField] private float staminaRegen = 50f;     // 초당 회복
+        [SerializeField] private float regenDelay = 1f;        // 마지막 사용 후 회복 시작까지 (초)
+        [SerializeField] private float minStaminaToRun = 10f;  // 달리기를 새로 시작할 때 필요한 최소량
+
+        private float stamina;
+        private float lastStaminaUseTime;
+
+        public float Stamina => stamina;
+        public float MaxStamina => maxStamina;
+        public event Action<float, float> OnStaminaChanged;   // (현재, 최대)
+        
+        
+        
         [Header("Roll")]
         // 가로: 진행도(0~1), 세로: 이동한 비율(0~1). Inspector에서 모양을 직접 조절할 수 있음
         [SerializeField] private AnimationCurve rollCurve = new AnimationCurve(
@@ -34,7 +51,7 @@ namespace Study3D.OutPost
             new Keyframe(1f, 1f, 0.4f, 0f));   // 끝: 느리게 (0이면 완전히 멈춤)
         [SerializeField] private float rollDistance = 4f;    // 구르는 거리 (m)
         [SerializeField] private float rollDuration = 0.7f;  // 구르는 시간 (초), 클립 길이에 맞춰 조절
-
+        [SerializeField] private float rollStamina = 20f; // 구르기 스태미나
         
         private int upperBodyLayer;   // UpperBody 레이어 번호
         
@@ -58,11 +75,32 @@ namespace Study3D.OutPost
         [SerializeField] private float distance = 12f;   // 보는 크기
         [SerializeField] private float turnSpeed = 720f; // 초당 회전 각도
         
+        
+        [Header("무기 교체")]
+        [SerializeField] private float putBackTime = 0.5f;   // 넣는 시간 (2-B에서 클립 길이에 맞춤)
+        [SerializeField] private float drawTime = 0.5f;      // 꺼내는 시간
+
+        private enum SwapPhase { None, PutBack, Draw }
+        private SwapPhase swapPhase = SwapPhase.None;
+        private float swapEndTime;    // 현재 단계가 끝나는 시각
+        private int pendingSlot;      // 바꿀 예정인 슬롯
+
+        public bool IsSwapping => swapPhase != SwapPhase.None;
+        public event Action<int> OnSlotChanged;   // 새 슬롯 번호 (0 또는 1)
+        
+        
+        
+        
         [Header("Ref")]
         [SerializeField] private Transform cameraPivot;
         [SerializeField] private Transform cameraTransform;
         [SerializeField] private Animator animator;
-        [SerializeField] private Gun gun;
+        [SerializeField] private Gun[] guns = new Gun[2];   // [0] 1번 슬롯, [1] 2번 슬롯
+
+        private int currentSlot;
+        public Gun CurrentGun => guns[currentSlot];
+        public Gun[] Guns => guns;          // UI에서 슬롯별 탄약을 읽을 때 사용
+        public int CurrentSlot => currentSlot;
         
         
         [Header("Animation")]
@@ -81,6 +119,7 @@ namespace Study3D.OutPost
         private void Awake()
         {
             Instance = this;
+            stamina = maxStamina;
         }
 
 
@@ -91,6 +130,7 @@ namespace Study3D.OutPost
             cam = cameraTransform.GetComponent<Camera>();
             animator = GetComponentInChildren<Animator>();
             ConfineCursor();
+            RefreshGunObjects();   // 두 총의 Awake가 끝난 뒤 1번 슬롯만 남김
         }
 
         private void Update()
@@ -98,7 +138,8 @@ namespace Study3D.OutPost
             ReadMoveInput();
             UpdateAimDirection();
             TryStartRoll();
-
+            UpdateStamina();
+            UpdateSwap();
             if (isRolling)
             {
                 UpdateRoll();
@@ -131,7 +172,8 @@ namespace Study3D.OutPost
             Quaternion cameraYaw = Quaternion.Euler(0f, yaw, 0f);
             moveVector = (cameraYaw * inputVector).normalized;   // 입력이 없으면 (0,0,0)
 
-            isRunning = moveVector.sqrMagnitude > 0.01f && SimpleInput.GetKey(Key.LeftShift);
+            bool hasStamina = isRunning ? stamina > 0f : stamina >= minStaminaToRun;
+            isRunning = moveVector.sqrMagnitude > 0.01f && SimpleInput.GetKey(Key.LeftShift) && hasStamina;
         }
 
         #region 이동 관련
@@ -201,7 +243,8 @@ namespace Study3D.OutPost
         {
             if (isRolling) return false;        // 구르는 중
             if (isRunning) return false;        // 달리는 중
-            if (gun.IsReloading) return false;  // 재장전 중
+            if (IsSwapping) return false;       // 무기 교체 중
+            if (CurrentGun.IsReloading) return false;  // 재장전 중
             // 몸이 아직 커서 쪽으로 다 돌지 않았으면 발사하지 않습니다.
             if (Vector3.Angle(transform.forward, aimDirection) > fireAngle) return false;
             return true;
@@ -211,13 +254,19 @@ namespace Study3D.OutPost
         {
             // 달리기 시작하면 재장전 취소
             if (isRunning) CancelReload();
-
+            if (SimpleInput.GetKeyDown(Key.Digit1)) EquipSlot(0);
+            if (SimpleInput.GetKeyDown(Key.Digit2)) EquipSlot(1);
+            
             // 재장전 (R) — 달리는 중에는 시작하지 않음
-            if (SimpleInput.GetKeyDown(Key.R) && !isRunning && gun.RequestReload())
+            
+            if (SimpleInput.GetKeyDown(Key.R) && !isRunning && !IsSwapping && CurrentGun.RequestReload())
                 animator.SetTrigger(ReloadHash);
             
             // 사격 (왼쪽 버튼을 누르고 있는 동안 연사)
-            if (!SimpleInput.GetMouseButton(SimpleInput.MouseButton.Left)) return;
+            bool firePressed = CurrentGun.IsAutomatic
+                ? SimpleInput.GetMouseButton(SimpleInput.MouseButton.Left)       // 연사: 누르고 있는 동안
+                : SimpleInput.GetMouseButtonDown(SimpleInput.MouseButton.Left);  // 단발: 누른 순간만
+            if (!firePressed) return;
             if (!CanFire()) return;
 
             // 발사 방향은 4단계에서 커서 방향으로 바꿉니다. 지금은 임시로 정면입니다.
@@ -225,7 +274,7 @@ namespace Study3D.OutPost
             Debug.DrawRay(transform.position + Vector3.up, aimDirection * 5f, Color.red);
             
             // 실제로 발사됐을 때만 사격 모션을 처음(0)부터 재생
-            if (gun.TryFire(aimDirection))
+            if (CurrentGun.TryFire(aimDirection))
                 animator.Play(FireStateHash, upperBodyLayer, 0f);
             
         }
@@ -233,11 +282,63 @@ namespace Study3D.OutPost
         // 재장전 로직과 애니메이션을 함께 끊습니다.
         private void CancelReload()
         {
-            if (!gun.IsReloading) return;
+            if (!CurrentGun.IsReloading) return;
 
-            gun.CancelReload();
+            CurrentGun.CancelReload();
             animator.ResetTrigger(ReloadHash);                         // 남아있는 트리거 제거
             animator.CrossFade(EmptyStateHash, 0.1f, upperBodyLayer);  // 상체를 0.1초 만에 Empty로
+        }
+        
+        // 슬롯을 바꿉니다. 같은 슬롯이거나 비어 있으면 무시
+        // 교체를 시작합니다. 실제 교체는 UpdateSwap에서 시간이 되면 일어남
+        private void EquipSlot(int slot)
+        {
+            if (IsSwapping) return;
+            if (slot == currentSlot) return;
+            if (slot < 0 || slot >= guns.Length || guns[slot] == null) return;
+
+            CancelReload();
+            pendingSlot = slot;
+            swapPhase = SwapPhase.PutBack;
+            swapEndTime = Time.time + putBackTime;
+            // 2-B: 여기서 PutBack 애니메이션 재생
+        }
+
+        
+        // 시간이 되면 다음 단계로 넘어갑니다. (재장전의 reloadEndTime과 같은 방식)
+        private void UpdateSwap()
+        {
+            if (!IsSwapping) return;
+            if (Time.time < swapEndTime) return;
+
+            if (swapPhase == SwapPhase.PutBack)
+            {
+                // 넣기 끝 → 총 모델 교체 → 꺼내기 시작
+                currentSlot = pendingSlot;
+                RefreshGunObjects();
+                OnSlotChanged?.Invoke(currentSlot);
+
+                swapPhase = SwapPhase.Draw;
+                swapEndTime = Time.time + drawTime;
+                // 2-B: 여기서 WeaponType 변경과 Draw 애니메이션 재생
+            }
+            else
+            {
+                swapPhase = SwapPhase.None;   // 꺼내기 끝 → 사격 가능
+            }
+        }
+
+        private void CancelSwap()
+        {
+            swapPhase = SwapPhase.None;   // PutBack 중이었다면 currentSlot이 그대로라 원래 총 유지
+        }
+        
+        
+        // 지금 슬롯의 총만 켜고 나머지는 끕니다.
+        private void RefreshGunObjects()
+        {
+            for (int i = 0; i < guns.Length; i++)
+                if (guns[i] != null) guns[i].gameObject.SetActive(i == currentSlot);
         }
         
         
@@ -251,7 +352,9 @@ namespace Study3D.OutPost
             if (isRolling) return;
             if (animator.GetCurrentAnimatorStateInfo(0).shortNameHash == RollStateHash) return;   
             if (!SimpleInput.GetKeyDown(Key.Space)) return;
-
+            if (stamina < rollStamina) return;   // 스태미나 부족
+            
+            
             // 입력이 없으면 바라보는 방향(앞)으로
             Vector3 worldDir = moveVector.sqrMagnitude > 0.01f ? moveVector : transform.forward;
 
@@ -268,8 +371,11 @@ namespace Study3D.OutPost
             animator.SetTrigger(RollHash);
 
             CancelReload();
+            CancelSwap();
             isRolling = true;
             rollTimer = 0f;
+            ChangeStamina(-rollStamina);
+
         }
         
         private void UpdateRoll()
@@ -288,6 +394,35 @@ namespace Study3D.OutPost
                 isRolling = false;
         }
         
+        #endregion
+
+        #region 스태미나
+
+        // 스태미나를 바꾸는 곳은 반드시 이 함수 하나만 거치게 합니다.
+        private void ChangeStamina(float amount)
+        {
+            float before = stamina;
+            stamina = Mathf.Clamp(stamina + amount, 0f, maxStamina);
+            if (amount < 0f) lastStaminaUseTime = Time.time;
+
+            if (!Mathf.Approximately(before, stamina))
+                OnStaminaChanged?.Invoke(stamina, maxStamina);
+        }
+
+        private void UpdateStamina()
+        {
+            if (isRolling) return;   // 구르는 중에는 소모도 회복도 없음
+
+            if (isRunning)
+            {
+                ChangeStamina(-runStaminaCost * Time.deltaTime);
+                return;
+            }
+
+            if (Time.time - lastStaminaUseTime < regenDelay) return;
+            ChangeStamina(staminaRegen * Time.deltaTime);
+        }
+
         #endregion
         
         private void OnDestroy()

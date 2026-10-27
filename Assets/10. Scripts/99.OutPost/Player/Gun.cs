@@ -8,6 +8,9 @@ namespace Study3D.OutPost
     public class Gun : MonoBehaviour
     {
         [Header("라이플")] 
+        [SerializeField] private string weaponName = "AssaultRifle";
+        [SerializeField] private Sprite icon;
+        [SerializeField] private bool isAutomatic = true;   // true: 누르고 있으면 연사, false: 클릭마다 한 발
         [SerializeField] private int magazineSize = 30;
         [SerializeField] private int reserveAmmo = 90;
         [SerializeField] private float reloadTime = 2f;
@@ -16,12 +19,22 @@ namespace Study3D.OutPost
         [SerializeField] private Bullet bulletPrefab;
         [SerializeField] private float damage = 10f;
         
+        
+        
         // 내부변수
         private int currentAmmo;
         private bool isReloading;
         private float nextFireTime;
         private float reloadEndTime;   // 이 시각이 되면 재장전 완료
 
+        public string WeaponName => weaponName;
+        public Sprite Icon => icon;
+        public int MagazineSize => magazineSize;
+
+        public bool IsAutomatic => isAutomatic;
+        
+        public event System.Action<int, int> OnAmmoChanged;   // (탄창, 예비)
+        
         public int CurrentAmmo => currentAmmo;
         public int ReserveAmmo => reserveAmmo;
         public bool IsReloading => isReloading;
@@ -45,6 +58,8 @@ namespace Study3D.OutPost
             reserveAmmo -= amount;
             isReloading = false;
 
+            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
+            
             Debug.Log($"재장전 완료: {currentAmmo} / {reserveAmmo}");
         }
         
@@ -59,6 +74,8 @@ namespace Study3D.OutPost
             nextFireTime = Time.time + fireInterval;    // 다음 발사 가능 시각 예약
             currentAmmo--;
 
+            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
+            
             Debug.Log($"발사! {currentAmmo} / {reserveAmmo}");
 
             // 총구 위치에서, 커서 방향을 바라보게 생성

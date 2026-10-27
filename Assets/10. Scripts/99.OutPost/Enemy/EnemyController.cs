@@ -22,7 +22,8 @@ namespace Study3D.OutPost
             Walk,
             Stay,
             Run,
-            Attack
+            Attack,
+            Dead
         }
         
         [Header("적 세팅")] 
@@ -73,9 +74,29 @@ namespace Study3D.OutPost
         private Transform player;
         private PlayerHealth playerHealth;
         
+        private EnemyHealth enemyHealth;
+        private Collider bodyCollider;
+        
         private static readonly int MoveXHash = Animator.StringToHash("MoveX");
         private static readonly int MoveZHash = Animator.StringToHash("MoveZ");
         private static readonly int AttackHash = Animator.StringToHash("Attack");
+        
+        
+        private void Awake()
+        {
+            enemyHealth = GetComponent<EnemyHealth>();
+            bodyCollider = GetComponent<Collider>();
+        }
+
+        private void OnEnable()
+        {
+            if (enemyHealth != null) enemyHealth.OnDeath += HandleDeath;
+        }
+
+        private void OnDisable()
+        {
+            if (enemyHealth != null) enemyHealth.OnDeath -= HandleDeath;
+        }
         
         
         private void Start()
@@ -98,12 +119,15 @@ namespace Study3D.OutPost
 
         private void Update()
         {
+            if (state == EnemyState.Dead) return; 
+            
             switch (state)
             {
                 case EnemyState.Stay: UpdateStay(); break;
                 case EnemyState.Walk: UpdateWalk(); break;
                 case EnemyState.Run:  UpdateRun();  break;
                 case EnemyState.Attack: UpdateAttack(); break;
+                
             }
 
             UpdateAnimation();
@@ -236,8 +260,25 @@ namespace Study3D.OutPost
         
         
         #endregion
+        
+        private void HandleDeath()
+        {
+            state = EnemyState.Dead;
 
+            // 공격 중이었다면 취소
+            isAttacking = false;
+            animator.ResetTrigger(AttackHash);
 
+            // 이동 정지
+            agent.ResetPath();
+            agent.velocity = Vector3.zero;
+            agent.enabled = false;
+
+            // 서 있는 콜라이더 끄기 → 총알 통과
+            if (bodyCollider != null) bodyCollider.enabled = false;
+        }
+        
+        
         #region 공격
         
         // 공격 상태: 멈춰서 플레이어를 보고, 주기마다 공격
