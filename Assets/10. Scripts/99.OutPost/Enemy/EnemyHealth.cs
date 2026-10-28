@@ -9,7 +9,8 @@ namespace Study3D.OutPost
 
         private float currentHealth;
         private bool isDead;
-
+        
+        
         public bool IsDead => isDead;
         public event Action OnDeath;
 

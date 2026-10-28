@@ -62,5 +62,6 @@ namespace Study3D.OutPost
             rectTransform.anchoredPosition = inputPosition;
         }
 
+            
     }
 }

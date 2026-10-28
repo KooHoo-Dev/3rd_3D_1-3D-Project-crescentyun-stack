@@ -34,7 +34,9 @@ namespace Study3D.OutPost
         [SerializeField] private float staminaRegen = 50f;     // 초당 회복
         [SerializeField] private float regenDelay = 1f;        // 마지막 사용 후 회복 시작까지 (초)
         [SerializeField] private float minStaminaToRun = 10f;  // 달리기를 새로 시작할 때 필요한 최소량
-
+        
+        
+        
         private float stamina;
         private float lastStaminaUseTime;
 
@@ -62,6 +64,24 @@ namespace Study3D.OutPost
         private static readonly int ReloadHash = Animator.StringToHash("Reload");
         private static readonly int EmptyStateHash = Animator.StringToHash("Empty");   // UpperBody 레이어의 빈 상태
         private static readonly int FireStateHash = Animator.StringToHash("Fire");   // UpperBody 레이어의 사격 상태
+        private static readonly int WeaponTypeHash = Animator.StringToHash("WeaponType"); 
+        
+        private static readonly int[] FireStateHashes =
+        {
+            Animator.StringToHash("FireRifle"),
+            Animator.StringToHash("FirePistol"),
+        };
+        private static readonly int[] DrawStateHashes =
+        {
+            Animator.StringToHash("DrawRifle"),
+            Animator.StringToHash("DrawPistol"),
+        };
+        private static readonly int[] PutBackStateHashes =
+        {
+            Animator.StringToHash("PutBackRifle"),
+            Animator.StringToHash("PutBackPistol"),
+        };
+        
         
         private bool isRolling;
         private float rollTimer;
@@ -122,6 +142,11 @@ namespace Study3D.OutPost
             stamina = maxStamina;
         }
 
+        private void OnEnable()
+        {
+            swapPhase = SwapPhase.None;   // 교체 도중에 죽었을 경우 정리
+            SyncWeaponType();
+        }
 
         private void Start()
         {
@@ -131,6 +156,7 @@ namespace Study3D.OutPost
             animator = GetComponentInChildren<Animator>();
             ConfineCursor();
             RefreshGunObjects();   // 두 총의 Awake가 끝난 뒤 1번 슬롯만 남김
+            SyncWeaponType();   // 1번 슬롯에 권총을 넣어도 맞는 자세로 시작
         }
 
         private void Update()
@@ -275,7 +301,7 @@ namespace Study3D.OutPost
             
             // 실제로 발사됐을 때만 사격 모션을 처음(0)부터 재생
             if (CurrentGun.TryFire(aimDirection))
-                animator.Play(FireStateHash, upperBodyLayer, 0f);
+                animator.Play(FireStateHashes[CurrentGun.WeaponType], upperBodyLayer, 0f);
             
         }
         
@@ -301,6 +327,7 @@ namespace Study3D.OutPost
             pendingSlot = slot;
             swapPhase = SwapPhase.PutBack;
             swapEndTime = Time.time + putBackTime;
+            animator.CrossFade(PutBackStateHashes[CurrentGun.WeaponType], 0.1f, upperBodyLayer);
             // 2-B: 여기서 PutBack 애니메이션 재생
         }
 
@@ -320,6 +347,8 @@ namespace Study3D.OutPost
 
                 swapPhase = SwapPhase.Draw;
                 swapEndTime = Time.time + drawTime;
+                SyncWeaponType();
+                animator.CrossFade(DrawStateHashes[CurrentGun.WeaponType], 0.1f, upperBodyLayer);
                 // 2-B: 여기서 WeaponType 변경과 Draw 애니메이션 재생
             }
             else
@@ -330,7 +359,9 @@ namespace Study3D.OutPost
 
         private void CancelSwap()
         {
-            swapPhase = SwapPhase.None;   // PutBack 중이었다면 currentSlot이 그대로라 원래 총 유지
+            if (!IsSwapping) return;
+            swapPhase = SwapPhase.None;
+            animator.CrossFade(EmptyStateHash, 0.1f, upperBodyLayer);   // 상체 자세 풀기
         }
         
         
@@ -339,6 +370,12 @@ namespace Study3D.OutPost
         {
             for (int i = 0; i < guns.Length; i++)
                 if (guns[i] != null) guns[i].gameObject.SetActive(i == currentSlot);
+        }
+        
+        private void SyncWeaponType()
+        {
+            if (animator == null || CurrentGun == null) return;
+            animator.SetInteger(WeaponTypeHash, CurrentGun.WeaponType);
         }
         
         

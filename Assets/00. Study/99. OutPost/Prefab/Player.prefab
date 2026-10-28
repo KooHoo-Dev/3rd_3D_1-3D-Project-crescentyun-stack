@@ -42,7 +42,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4479036552259601054}
   - component: {fileID: 1667240402326509184}
-  - component: {fileID: 6004192804841876053}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -83,6 +82,11 @@ MonoBehaviour:
   fireAngle: 10
   moveSpeed: 3
   runSpeed: 6
+  maxStamina: 100
+  runStaminaCost: 50
+  staminaRegen: 50
+  regenDelay: 1
+  minStaminaToRun: 10
   rollCurve:
     serializedVersion: 2
     m_Curve:
@@ -109,34 +113,20 @@ MonoBehaviour:
     m_RotationOrder: 4
   rollDistance: 4
   rollDuration: 0.7
+  rollStamina: 20
   pitch: 45
   yaw: 45
   distance: 10
   turnSpeed: 720
+  putBackTime: 0.5
+  drawTime: 0.5
   cameraPivot: {fileID: 2123191440453652079}
   cameraTransform: {fileID: 418009556995385114}
   animator: {fileID: 7864213836287948873}
-  gun: {fileID: 6004192804841876053}
+  guns:
+  - {fileID: 0}
+  - {fileID: 0}
   animDamp: 0.1
---- !u!114 &6004192804841876053
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5230584590597379143}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b07d7f78dce4e50a19a7a0e8b26f70e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.Gun
-  magazineSize: 30
-  reserveAmmo: 90
-  reloadTime: 3
-  fireInterval: 0.1
-  muzzle: {fileID: 6355282793685226902}
-  bulletPrefab: {fileID: 5535052479164170891, guid: c5161a11a66298a4f8cfa1f943fafd3e, type: 3}
-  damage: 10
 --- !u!1 &5598612494114871457
 GameObject:
   m_ObjectHideFlags: 0

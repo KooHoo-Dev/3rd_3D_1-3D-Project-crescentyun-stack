@@ -1439,7 +1439,7 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1357078812}
+    m_TransformParent: {fileID: 328824253}
     m_Modifications:
     - target: {fileID: 1508934165754910, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       propertyPath: m_Name
@@ -1447,31 +1447,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4415442749456168, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.097
+      value: 0.70796466
       objectReference: {fileID: 0}
     - target: {fileID: 4415442749456168, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.033
+      value: 0.004055253
       objectReference: {fileID: 0}
     - target: {fileID: 4415442749456168, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.025
+      value: -0.046245836
       objectReference: {fileID: 0}
     - target: {fileID: 4415442749456168, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.37944463
+      value: 0.35013625
       objectReference: {fileID: 0}
     - target: {fileID: 4415442749456168, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.31897065
+      value: -0.2971569
       objectReference: {fileID: 0}
     - target: {fileID: 4415442749456168, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.5956249
+      value: 0.61028737
       objectReference: {fileID: 0}
     - target: {fileID: 4415442749456168, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.6320684
+      value: -0.64548564
       objectReference: {fileID: 0}
     - target: {fileID: 4415442749456168, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -1487,7 +1487,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 4415442749456168, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2124150742}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 1508934165754910, guid: 68317e2c4c57a6e45be7063240f91cbb, type: 3}
       insertIndex: -1
@@ -12452,6 +12455,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 212036778}
+  - component: {fileID: 212036779}
   m_Layer: 5
   m_Name: EquipSlot_2
   m_TagString: Untagged
@@ -12484,6 +12488,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 72, y: 72}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &212036779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 212036777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ede0d08ce322412d90c8d4dc4ad9cfdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.WeaponSlotUI
+  icon: {fileID: 150406154}
+  highlight: {fileID: 1994928474}
+  tooltip: {fileID: 859545632}
+  tooltipText: {fileID: 379971289}
+  ammoText: {fileID: 1721995870}
 --- !u!1001 &213723697
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -18352,6 +18373,11 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 4094038117698566, guid: d7beb5687da9e074fbb0455868c345dd, type: 3}
   m_PrefabInstance: {fileID: 327389569}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &328824253 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2706790590822653025, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
+  m_PrefabInstance: {fileID: 1327586950}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &328951016
 GameObject:
@@ -25800,7 +25826,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b07d7f78dce4e50a19a7a0e8b26f70e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.Gun
-  weaponName: AssaultRifle
+  weaponType: 1
+  weaponName: Pistol
   icon: {fileID: 0}
   isAutomatic: 1
   magazineSize: 6
@@ -47117,6 +47144,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 768901333}
+  - component: {fileID: 768901334}
   m_Layer: 5
   m_Name: EquipSlot_1
   m_TagString: Untagged
@@ -47149,6 +47177,23 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 72, y: 72}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &768901334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 768901332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ede0d08ce322412d90c8d4dc4ad9cfdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.WeaponSlotUI
+  icon: {fileID: 156827690}
+  highlight: {fileID: 289606519}
+  tooltip: {fileID: 1884702328}
+  tooltipText: {fileID: 1019539059}
+  ammoText: {fileID: 1266612923}
 --- !u!1 &768992814
 GameObject:
   m_ObjectHideFlags: 0
@@ -80476,7 +80521,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1295873736}
   m_Layer: 0
-  m_Name: ============Player====================
+  m_Name: ===============Player=================
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -82134,6 +82179,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1367966176059291194, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1667240402326509184, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
       propertyPath: staminaRegen
       value: 30
@@ -82194,15 +82243,18 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 6004192804841876053, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
+    - target: {fileID: 5230584590597379143, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 4479036552259601054, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1636910205}
-    - targetCorrespondingSourceObject: {fileID: 3620752372996179497, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
-      insertIndex: 1
+    - targetCorrespondingSourceObject: {fileID: 2706790590822653025, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 440916548}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5230584590597379143, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
@@ -84130,11 +84182,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4889639989300578, guid: 419aefbcec9e5084dac11a75d61d329a, type: 3}
   m_PrefabInstance: {fileID: 1356072751}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1357078812 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3620752372996179497, guid: aa3b7cae5f7100f4d9c1dccf4a668c03, type: 3}
-  m_PrefabInstance: {fileID: 1327586950}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1359095278
 GameObject:
   m_ObjectHideFlags: 0
@@ -85537,6 +85584,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1377724628}
+  - component: {fileID: 1377724629}
   m_Layer: 5
   m_Name: StaminaBar
   m_TagString: Untagged
@@ -85565,6 +85613,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 140, y: 12}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1377724629
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1377724627}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deb1d3460f364f43a4b4d04fbfdb65e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.GaugeBar
+  fill: {fileID: 1381245139}
+  valueText: {fileID: 0}
 --- !u!1 &1379629611
 GameObject:
   m_ObjectHideFlags: 0
@@ -107262,6 +107324,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1736824813}
+  - component: {fileID: 1736824814}
   m_Layer: 5
   m_Name: HealthBar
   m_TagString: Untagged
@@ -107291,6 +107354,28 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 220, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1736824814
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1736824812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6913af13f7544eeabab879b385a644db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.HealthBarTrail
+  fill: {fileID: 193407991}
+  trail: {fileID: 193407991}
+  healPreview: {fileID: 193407991}
+  label: {fileID: 2117655575}
+  vignette: {fileID: 0}
+  trailDelay: 0.45
+  maxHold: 1.2
+  trailSpeed: 0.55
+  healSpeed: 0.6
+  lowThreshold: 0.3
 --- !u!1001 &1738641205
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -113564,6 +113649,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b07d7f78dce4e50a19a7a0e8b26f70e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.Gun
+  weaponType: 0
   weaponName: AssaultRifle
   icon: {fileID: 0}
   isAutomatic: 1
@@ -133273,6 +133359,37 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4646407613516282, guid: f996731b12085f44883c30318a77c3c8, type: 3}
   m_PrefabInstance: {fileID: 2123421219}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2124150741
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2124150742}
+  m_Layer: 0
+  m_Name: LeftHandGrip
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2124150742
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2124150741}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.116, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 440916548}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2126688344
 PrefabInstance:
   m_ObjectHideFlags: 0

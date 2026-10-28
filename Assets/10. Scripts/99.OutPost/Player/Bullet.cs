@@ -14,6 +14,7 @@ namespace Study3D.OutPost
         private float timer;
         private float damage;
         
+        
 
         private void Update()
         {

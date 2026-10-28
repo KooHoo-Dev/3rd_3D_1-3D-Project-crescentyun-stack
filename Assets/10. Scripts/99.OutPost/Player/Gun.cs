@@ -7,7 +7,8 @@ namespace Study3D.OutPost
 
     public class Gun : MonoBehaviour
     {
-        [Header("라이플")] 
+        [Header("무기정보")] 
+        [SerializeField] private int weaponType = 0;   // 0 라이플, 1 권총, 2 바주카 (Animator WeaponType 값)
         [SerializeField] private string weaponName = "AssaultRifle";
         [SerializeField] private Sprite icon;
         [SerializeField] private bool isAutomatic = true;   // true: 누르고 있으면 연사, false: 클릭마다 한 발
@@ -27,6 +28,7 @@ namespace Study3D.OutPost
         private float nextFireTime;
         private float reloadEndTime;   // 이 시각이 되면 재장전 완료
 
+        public int WeaponType => weaponType;
         public string WeaponName => weaponName;
         public Sprite Icon => icon;
         public int MagazineSize => magazineSize;
