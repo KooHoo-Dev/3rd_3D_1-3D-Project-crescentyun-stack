@@ -12,10 +12,12 @@ namespace Study3D.OutPost
         [SerializeField] private GameObject tooltip;     // WeaponNameTooltip
         [SerializeField] private TMP_Text tooltipText;
         [SerializeField] private TMP_Text ammoText;
-
+        [SerializeField] private ReloadCooldown reloadCooldown;   // 비워두면 원형 표시 안 함
         // 어떤 총이 들어 있는지 (이름, 아이콘)
         public void SetWeapon(Gun gun)
         {
+            if (reloadCooldown != null) reloadCooldown.SetGun(gun);
+            
             if (gun == null)   // 빈 슬롯
             {
                 icon.enabled = false;

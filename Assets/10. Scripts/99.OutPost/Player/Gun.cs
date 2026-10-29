@@ -28,6 +28,11 @@ namespace Study3D.OutPost
         private float nextFireTime;
         private float reloadEndTime;   // 이 시각이 되면 재장전 완료
 
+        
+        
+        
+        public float ReloadTime => reloadTime;
+        public float ReloadRemain => isReloading ? Mathf.Max(0f, reloadEndTime - Time.time) : 0f;
         public int WeaponType => weaponType;
         public string WeaponName => weaponName;
         public Sprite Icon => icon;
