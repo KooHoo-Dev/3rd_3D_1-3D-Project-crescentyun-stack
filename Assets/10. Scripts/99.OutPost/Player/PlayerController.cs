@@ -22,6 +22,7 @@ namespace Study3D.OutPost
         [SerializeField] private float fireAngle = 10f;   // 몸과 커서 방향이 이 각도 이내일 때만 발사
 
         private Vector3 aimDirection;   // 캐릭터에서 커서를 향하는 수평 방향 (길이 1)
+        public Vector3 AimDirection => aimDirection;   // 시야(PlayerVision)에서 읽음
         
         [Header("이동")]   
         [SerializeField] private float moveSpeed = 3f;
