@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 335018c2a5404397982b55d229538cde, type: 3}
+  m_Name: Item_Medkit
+  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.InventoryItem
+  Key: 3
+  Name: Medkit
+  Description: 
+  Icon: {fileID: 21300000, guid: 8a11012907a352d4aa0251bce27c3a8f, type: 3}
+  SearchTime: 2
+  Type: 3
+  MaxStack: 5
+  GunPrefab: {fileID: 0}
+  MeleePrefab: {fileID: 0}
+  AmmoType: 0
+  MaterialType: 0
+  HealAmount: 30

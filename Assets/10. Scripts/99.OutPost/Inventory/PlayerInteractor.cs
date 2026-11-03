@@ -10,6 +10,30 @@ namespace Study3D.OutPost
         [SerializeField] private float range = 2f;
         [SerializeField] private GameObject promptUI;   // "F 루팅" 안내 (선택)
 
+        // 플레이어가 PlayerSpawner로 프리팹에서 생성되면 씬 UI(InteractPrompt) 참조가 비어 있다.
+        // (프리팹은 씬 오브젝트를 참조할 수 없음) → 비어 있으면 이름으로 찾아 연결한다.
+        private const string PromptName = "InteractPrompt";
+
+        private void Start()
+        {
+            if (promptUI == null) promptUI = FindSceneObjectIncludingInactive(PromptName);
+            if (promptUI == null)
+                Debug.LogWarning($"[{nameof(PlayerInteractor)}] '{PromptName}' 를 찾지 못해 [F] 루팅 안내가 표시되지 않습니다.", this);
+        }
+
+        // InteractPrompt는 평소 꺼져 있어서 GameObject.Find로는 못 찾는다 → 꺼진 오브젝트까지 검색
+        private static GameObject FindSceneObjectIncludingInactive(string objectName)
+        {
+#if UNITY_2023_1_OR_NEWER
+            var all = FindObjectsByType<RectTransform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+#else
+            var all = FindObjectsOfType<RectTransform>(true);
+#endif
+            foreach (var rt in all)
+                if (rt.name == objectName) return rt.gameObject;
+            return null;
+        }
+
         private void Update()
         {
             var sys = InventorySystem.Instance;

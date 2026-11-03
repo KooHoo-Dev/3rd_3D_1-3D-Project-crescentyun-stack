@@ -161,6 +161,20 @@ namespace Study3D.OutPost
             return playerInventory.RemoveWhere(item => item.Type == ItemType.Ammo && item.AmmoType == type, amount);
         }
 
+        // ───────── 재료 (포탑 건설/수리에서 사용) ─────────
+        public int CountMaterial(MaterialType type)
+        {
+            if (playerInventory == null || type == MaterialType.None) return 0;
+            return playerInventory.CountWhere(item => item.Type == ItemType.Material && item.MaterialType == type);
+        }
+
+        /// <summary> 재료를 amount개까지 빼낸다. 실제로 뺀 수를 돌려준다. </summary>
+        public int ConsumeMaterial(MaterialType type, int amount)
+        {
+            if (playerInventory == null || type == MaterialType.None || amount <= 0) return 0;
+            return playerInventory.RemoveWhere(item => item.Type == ItemType.Material && item.MaterialType == type, amount);
+        }
+
         // ───────── 기존 기능 유지 ─────────
         public void Register(Inventory inventory)
         {

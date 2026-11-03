@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: de189722850a08743a8b5c2dc39dddcc, type: 3}
+  m_Name: LootTable_Zombie
+  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.LootTable
+  guaranteed: []
+  entries:
+  - Item: {fileID: 11400000, guid: 4bc8ae492fe21ec438110fcef1856b25, type: 2}
+    Weight: 3
+    MinAmount: 2
+    MaxAmount: 5
+  - Item: {fileID: 11400000, guid: f6b458796e68e134f8ab1f26ebc3ac66, type: 2}
+    Weight: 4
+    MinAmount: 3
+    MaxAmount: 5
+  - Item: {fileID: 11400000, guid: c5aad4db6613de141a0f6cb0774f5de0, type: 2}
+    Weight: 2
+    MinAmount: 10
+    MaxAmount: 30
+  - Item: {fileID: 11400000, guid: 1250cc76e8d318e40a86fd1b1563de58, type: 2}
+    Weight: 1
+    MinAmount: 10
+    MaxAmount: 30
+  minCount: 1
+  maxCount: 3

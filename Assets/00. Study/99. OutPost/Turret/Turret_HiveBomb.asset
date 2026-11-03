@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2ea7f2c1f5ed7e4c9564d1732cd5969, type: 3}
+  m_Name: Turret_HiveBomb
+  m_EditorClassIdentifier: Assembly-CSharp::Study3D.OutPost.TurretData
+  DisplayName: HiveBomb
+  Icon: {fileID: 0}
+  Description: 
+  TurretPrefab: {fileID: 1815751844614860, guid: cf901878dbd09dd4582652ea02c45eee, type: 3}
+  Damage: 20
+  FireInterval: 0.5
+  MagazineSize: 20
+  ReloadTime: 2.5
+  Range: 15
+  RotateSpeed: 180
+  AttackAngle: 5
+  MaxHealth: 300
+  BuildCost:
+  - Type: 1
+    Count: 30
+  - Type: 2
+    Count: 30

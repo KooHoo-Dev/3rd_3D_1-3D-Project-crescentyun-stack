@@ -1,5 +1,4 @@
-﻿using Study.OutPost;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Study3D.OutPost
 {
@@ -68,6 +67,14 @@ namespace Study3D.OutPost
             
         }
         
+        /// <summary> 캐릭터 선택 스탯 적용 (PlayerSpawner 가 생성 직후 호출). HP는 가득 채운다. </summary>
+        public void SetMaxHp(float value)
+        {
+            maxHp = Mathf.Max(1f, value);
+            hp = maxHp;
+            OnHpChanged?.Invoke(hp, maxHp);
+        }
+
         // 소모품 사용 시 회복
         public void Heal(float amount)
         {

@@ -5,11 +5,12 @@ namespace Study3D.OutPost
     // 아이템 분류 — 어느 칸에 들어갈 수 있는지, 겹쳐지는지를 정한다
     public enum ItemType
     {
-        Misc,         // 기타 (재료 등)
+        Misc,         // 기타
         Weapon,       // 총 — Hotbar 1, 2번 칸
         Melee,        // 근접무기 — Hotbar V 칸
         Consumable,   // 소모품 — Hotbar 3~6번 칸 (바로가기)
         Ammo,         // 탄약 — 재장전 시 인벤토리에서 소모
+        Material,     // 재료 — 포탑 건설/수리 시 인벤토리에서 소모 (enum 저장값이 밀리지 않게 맨 끝에 추가)
     }
 
     // 탄약 종류 — 총(Gun)과 탄약 아이템이 같은 값을 가지면 서로 맞는다
@@ -18,6 +19,14 @@ namespace Study3D.OutPost
         None,
         Rifle,
         Pistol,
+    }
+
+    // 재료 종류 — 포탑 건설 비용(TurretData.BuildCost)과 재료 아이템이 같은 값을 가지면 서로 맞는다
+    public enum MaterialType
+    {
+        None,
+        Wood,    // 나무
+        Scrap,   // 고철
     }
 
     [CreateAssetMenu(menuName = "OutPost/Inventory Item", fileName = "Item_")]
@@ -47,9 +56,10 @@ namespace Study3D.OutPost
 
         [Header("탄약 전용")]
         public AmmoType AmmoType = AmmoType.None;
-        
-        
-        
+
+        [Header("재료 전용")]
+        public MaterialType MaterialType = MaterialType.None;
+
         [Header("소모품 전용")]
         [Tooltip("사용하면 회복되는 HP")]
         [Min(0f)] public float HealAmount = 0f;

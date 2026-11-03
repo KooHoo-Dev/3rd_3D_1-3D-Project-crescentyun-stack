@@ -25,7 +25,8 @@ namespace Study3D.OutPost
         }
 
         // 어떤 총이 들어 있는지 (이름, 아이콘)
-        public void SetWeapon(Gun gun)
+        // 아이콘/이름은 Hotbar 아이템(InventoryItem) 것을 우선 사용 → 총 프리팹의 Icon이 비어 있어도 표시됨
+        public void SetWeapon(Gun gun, InventoryItem item = null)
         {
             if (reloadCooldown != null) reloadCooldown.SetGun(gun);
 
@@ -35,8 +36,10 @@ namespace Study3D.OutPost
                 return;
             }
 
-            ShowIcon(gun.Icon);
-            SetText(tooltipText, gun.WeaponName);
+            Sprite sprite = item != null && item.Icon != null ? item.Icon : gun.Icon;
+            string weaponName = item != null && !string.IsNullOrEmpty(item.Name) ? item.Name : gun.WeaponName;
+            ShowIcon(sprite);
+            SetText(tooltipText, weaponName);
         }
 
         // 근접무기처럼 Gun이 없는 아이템 (이름, 아이콘만)

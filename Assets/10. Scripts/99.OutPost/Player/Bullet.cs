@@ -13,6 +13,7 @@ namespace Study3D.OutPost
 
         private float timer;
         private float damage;
+        private Transform owner;   // 쏜 쪽 (포탑이면 포탑, 플레이어 총이면 null)
         
         
 
@@ -39,14 +40,25 @@ namespace Study3D.OutPost
             Debug.Log($"명중: {hit.collider.name}");
             // 콜라이더가 자식(팔, 머리 등)에 있어도 찾을 수 있게 부모까지 검색
             IDamageable target = hit.collider.GetComponentInParent<IDamageable>();
-            if (target != null) target.TakeDamage(damage, hit.point, hit.normal);
+
+            // 아군 피해 없음: 포탑은 총알에 대미지를 받지 않고, 포탑 총알은 플레이어에게 대미지를 주지 않음
+            bool friendly = target is TurretHealth || (owner != null && target is PlayerHealth);
+
+            if (target != null && !friendly)
+            {
+                // 좀비에게 누가 쐈는지 알려줌 (포탑에 맞으면 그 포탑을 공격하러 감)
+                if (target is EnemyHealth enemy) enemy.SetAttacker(owner);
+                target.TakeDamage(damage, hit.point, hit.normal);
+            }
             Destroy(gameObject);
         }
         
-        // 생성 직후 Gun이 호출합니다.
-        public void Init(float damage)
+        // 생성 직후 Gun(플레이어) 또는 AutoTurret(포탑)이 호출합니다.
+        // owner: 쏜 쪽. 플레이어 총은 비워둠(null)
+        public void Init(float damage, Transform owner = null)
         {
             this.damage = damage;
+            this.owner = owner;
         }
         
     }

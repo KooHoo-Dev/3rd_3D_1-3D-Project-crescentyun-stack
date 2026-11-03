@@ -36,7 +36,10 @@ namespace Study3D.OutPost
             player = GetComponent<PlayerController>();
             viewMesh = new Mesh { name = "View Mesh" };
             viewMesh.MarkDynamic();               // 매 프레임 바뀌는 메시라고 알려줌
-            viewMeshFilter.mesh = viewMesh;
+
+            // 프리팹은 씬 오브젝트(VisionMesh)를 참조할 수 없으므로 비어 있을 수 있다
+            // → 생성 직후 PlayerSpawner 가 SetViewMeshFilter 로 넣어준다
+            if (viewMeshFilter != null) viewMeshFilter.mesh = viewMesh;
 
             vertices = new Vector3[rayCount + 1];
             triangles = new int[rayCount * 3];
@@ -45,9 +48,18 @@ namespace Study3D.OutPost
             
         }
 
+        /// <summary> 시야 메시를 그릴 오브젝트 연결 (프리팹으로 생성된 경우 PlayerSpawner 가 호출) </summary>
+        public void SetViewMeshFilter(MeshFilter filter)
+        {
+            viewMeshFilter = filter;
+            if (viewMeshFilter != null) viewMeshFilter.mesh = viewMesh;
+        }
+
         // aimDirection은 Update에서 갱신되므로, 그 뒤인 LateUpdate에서 계산
         private void LateUpdate()
         {
+            if (viewMeshFilter == null) return;   // 연결 전에는 그리지 않음 (CanSee 판정은 계속 동작)
+
             Vector3 eye = transform.position + Vector3.up * eyeHeight;
             float groundY = transform.position.y + meshHeight;
             Transform meshTf = viewMeshFilter.transform;

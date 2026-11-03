@@ -74,8 +74,19 @@ namespace Study3D.OutPost
                 return;
             }
 
+            // 미확인: 아이콘 스프라이트를 빼고 회색 사각형만 보여준다 (모양·개수가 드러나지 않게)
+            // Image.color는 스프라이트에 곱해지는 색이라, 스프라이트를 둔 채 회색으로 칠하면 실루엣이 비쳐 보인다.
+            if (!searched)
+            {
+                Content.sprite = null;
+                Content.color = hiddenColor;
+                Content.enabled = true;
+                if (countText != null) countText.text = "";
+                return;
+            }
+
             Content.sprite = stack.Data.Icon;
-            Content.color = searched ? Color.white : hiddenColor;
+            Content.color = Color.white;
             Content.enabled = true;
             if (countText != null) countText.text = stack.Count > 1 ? stack.Count.ToString() : "";
         }

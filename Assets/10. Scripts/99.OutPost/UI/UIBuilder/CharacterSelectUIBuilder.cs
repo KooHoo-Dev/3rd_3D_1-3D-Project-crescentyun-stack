@@ -16,7 +16,8 @@ namespace Study3D.OutPost
     /// 빈 GameObject에 붙인 뒤, 컴포넌트 우클릭 메뉴에서 실행한다.
     ///  - 1. Build UI : 캐릭터 선택창 생성
     ///  - 2. Clear UI : 이 툴이 만든 루트(CharacterSelectUI)만 삭제
-    /// 화면만 만들며, 게임 로직은 부착하지 않는다.
+    /// 화면을 만든 뒤 CharacterSelectUI / CharacterIconSlot 컴포넌트를 붙이고 참조까지 연결한다.
+    /// (캐릭터 목록과 이동할 씬 이름은 생성된 CharacterSelectUI 인스펙터에서 넣는다)
     /// </summary>
     public class CharacterSelectUIBuilder : MonoBehaviour
     {
@@ -33,25 +34,30 @@ namespace Study3D.OutPost
 
         // ── 색상 (스프라이트가 들어갈 자리는 색 블록으로 대체) ──
         private static readonly Color BackgroundColor    = new Color(0.45f, 0.16f, 0.08f, 1f);   // 배경 바탕
-        private static readonly Color IllustrationColor  = new Color(0.75f, 0.32f, 0.12f, 1f);   // 일러스트 자리
+        private static readonly Color IllustrationColor  = Color.white;                          // 일러스트 자리
         private static readonly Color InfoPanelColor     = new Color(0.12f, 0.06f, 0.04f, 0.75f); // 설명 패널 바탕(반투명)
         private static readonly Color InfoImageColor     = new Color(1f, 1f, 1f, 0.08f);          // 설명 이미지 자리
         private static readonly Color IconFrameColor     = new Color(0.18f, 0.16f, 0.15f, 1f);   // 아이콘 테두리
-        private static readonly Color IconPortraitColor  = new Color(0.50f, 0.50f, 0.50f, 1f);   // 아이콘 초상화 자리
-        private static readonly Color LockedPortraitColor= new Color(0.25f, 0.25f, 0.25f, 1f);   // 잠긴 슬롯
+        private static readonly Color IconPortraitColor  = Color.white;                          // 아이콘 초상화 자리
         private static readonly Color SelectedColor      = new Color(1f, 0.60f, 0.10f, 1f);      // 선택 하이라이트
+        private static readonly Color StartButtonColor   = new Color(0.85f, 0.45f, 0.10f, 1f);   // 시작 버튼
 
         // ── 캐릭터 설명 패널 (중앙 좌측) ──
         private static readonly Vector2 InfoPanelSize   = new Vector2(760f, 440f);
         private static readonly Vector2 InfoPanelOffset = new Vector2(120f, 60f);   // 좌측 가장자리에서 120px, 중앙보다 60px 위
 
         // ── 캐릭터 선택 아이콘 (중앙 하단) ──
-        private const int   CharacterCount       = 6;      // 마지막 칸은 잠금(?) 슬롯
+        private const int   CharacterCount       = 4;
         private const int   DefaultSelectedIndex = 0;      // 처음 선택되어 보일 칸
         private const float IconSpacing          = 20f;
         private const float IconBarBottom        = 40f;    // 화면 하단에서 띄울 거리
         private const float IconBorder           = 6f;     // 테두리 두께
         private static readonly Vector2 IconSize = new Vector2(110f, 135f);
+
+        // ── 시작 버튼 (우측 하단) ──
+        private static readonly Vector2 StartButtonSize   = new Vector2(280f, 90f);
+        private static readonly Vector2 StartButtonOffset = new Vector2(-60f, 40f);   // 우측 하단 모서리 기준
+        private const string StartButtonText = "Start";
 
         #endregion
 
@@ -73,6 +79,9 @@ namespace Study3D.OutPost
             CreateBackground(canvas.transform);       // 1. 뒷배경 (일러스트)
             CreateInfoPanel(canvas.transform);        // 2. 중앙 좌측 (설명 칸)
             CreateCharacterIconBar(canvas.transform); // 3. 중앙 하단 (선택 아이콘)
+            CreateStartButton(canvas.transform);      // 4. 우측 하단 (시작 버튼)
+
+            ConnectLogic(canvas);                     // 5. 로직 컴포넌트 부착 + 참조 연결
 
             CheckEventSystem();
 
@@ -230,8 +239,7 @@ namespace Study3D.OutPost
 
             for (int i = 0; i < CharacterCount; i++)
             {
-                bool isLocked = (i == CharacterCount - 1);
-                GameObject highlight = CreateCharacterIcon(bar.transform, i, isLocked);
+                GameObject highlight = CreateCharacterIcon(bar.transform, i);
                 if (i != DefaultSelectedIndex) hiddenHighlights.Add(highlight);
             }
 
@@ -239,10 +247,9 @@ namespace Study3D.OutPost
         }
 
         /// <summary>아이콘 한 칸을 만들고, 선택 하이라이트 오브젝트를 돌려준다.</summary>
-        private GameObject CreateCharacterIcon(Transform parent, int index, bool isLocked)
+        private GameObject CreateCharacterIcon(Transform parent, int index)
         {
-            string label = isLocked ? "?" : string.Empty;
-            Button button = NewButton($"CharacterIcon_{index + 1:00}", parent, label, out TMP_Text labelText);
+            Button button = NewButton($"CharacterIcon_{index + 1:00}", parent, string.Empty, out TMP_Text labelText);
 
             RectTransform rect = button.GetComponent<RectTransform>();
             rect.anchorMin        = new Vector2(0.5f, 0.5f);
@@ -264,17 +271,82 @@ namespace Study3D.OutPost
             GameObject portrait = NewPanel("Portrait", button.transform, Vector2.zero);
             Stretch(portrait.GetComponent<RectTransform>(), IconBorder);
             Image portraitImage = portrait.GetComponent<Image>();
-            portraitImage.color = isLocked ? LockedPortraitColor : IconPortraitColor;
+            portraitImage.color = IconPortraitColor;
             portraitImage.preserveAspect = true;
             portraitImage.raycastTarget = false;
 
-            // 그리는 순서 : 하이라이트 → 초상화 → 라벨("?")
+            // 아이콘에는 글자가 필요 없으므로 라벨 제거
+            Object.DestroyImmediate(labelText.gameObject);
+
+            // 그리는 순서 : 하이라이트 → 초상화
             highlight.transform.SetSiblingIndex(0);
             portrait.transform.SetSiblingIndex(1);
-            labelText.transform.SetAsLastSibling();
-            labelText.fontSize = 64f;
 
             return highlight;
+        }
+
+        #endregion
+
+        #region 4. 우측 하단 (시작 버튼)
+
+        private void CreateStartButton(Transform canvas)
+        {
+            Button button = NewButton("StartButton", canvas, StartButtonText, out TMP_Text labelText);
+
+            RectTransform rect = button.GetComponent<RectTransform>();
+            rect.anchorMin        = new Vector2(1f, 0f);
+            rect.anchorMax        = new Vector2(1f, 0f);
+            rect.pivot            = new Vector2(1f, 0f);
+            rect.anchoredPosition = StartButtonOffset;
+            rect.sizeDelta        = StartButtonSize;
+
+            button.GetComponent<Image>().color = StartButtonColor;
+            labelText.fontSize = 40f;
+        }
+
+        #endregion
+
+        #region 5. 로직 연결
+
+        // 만든 오브젝트에 런타임 컴포넌트를 붙이고, private [SerializeField] 를 SerializedObject 로 채운다
+        private void ConnectLogic(GameObject canvas)
+        {
+            Transform root = canvas.transform;
+
+            // ── 아이콘 칸마다 CharacterIconSlot ──
+            Transform bar = root.Find("CharacterIconBar");
+            var slots = new List<CharacterIconSlot>();
+            for (int i = 0; i < bar.childCount; i++)
+            {
+                Transform icon = bar.GetChild(i);
+                var slot = icon.gameObject.AddComponent<CharacterIconSlot>();
+
+                var slotSO = new SerializedObject(slot);
+                slotSO.FindProperty("button").objectReferenceValue    = icon.GetComponent<Button>();
+                slotSO.FindProperty("highlight").objectReferenceValue = icon.Find("SelectedHighlight").gameObject;
+                slotSO.FindProperty("portrait").objectReferenceValue  = icon.Find("Portrait").GetComponent<Image>();
+                slotSO.ApplyModifiedPropertiesWithoutUndo();
+
+                slots.Add(slot);
+            }
+
+            // ── 루트에 CharacterSelectUI ──
+            var ui = canvas.AddComponent<CharacterSelectUI>();
+            var uiSO = new SerializedObject(ui);
+
+            SerializedProperty slotsProp = uiSO.FindProperty("slots");
+            slotsProp.arraySize = slots.Count;
+            for (int i = 0; i < slots.Count; i++)
+                slotsProp.GetArrayElementAtIndex(i).objectReferenceValue = slots[i];
+
+            uiSO.FindProperty("illustrationImage").objectReferenceValue =
+                root.Find("Background/CharacterIllustration").GetComponent<Image>();
+            uiSO.FindProperty("infoImage").objectReferenceValue =
+                root.Find("CharacterInfoPanel/CharacterInfoImage").GetComponent<Image>();
+            uiSO.FindProperty("startButton").objectReferenceValue =
+                root.Find("StartButton").GetComponent<Button>();
+
+            uiSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
         #endregion

@@ -48,6 +48,9 @@ namespace Study3D.OutPost
 
         public float Stamina => stamina;
         public float MaxStamina => maxStamina;
+
+        // 테스트용: true면 스태미나가 줄지 않음 (DebugCheats의 F1)
+        public bool InfiniteStamina { get; private set; }
         public event Action<float, float> OnStaminaChanged;   // (현재, 최대)
         
         
@@ -316,6 +319,10 @@ namespace Study3D.OutPost
         {
             // 인벤토리가 열려 있으면 클릭이 사격으로 나가지 않게 막음
             if (InventorySystem.IsInitialized && InventorySystem.Instance.IsOpen) return;
+            // 포탑 건설 메뉴/배치 중이면 클릭이 사격으로 나가지 않게 막음
+            if (TurretBuilder.IsBusy) return;
+            // 게임이 끝났으면(승리 화면) 입력 무시
+            if (GameManager.IsGameOver) return;
 
             // 달리기 시작하면 재장전 / 근접 공격 취소
             if (isRunning)
@@ -707,6 +714,7 @@ namespace Study3D.OutPost
         // 스태미나를 바꾸는 곳은 반드시 이 함수 하나만 거치게 합니다.
         private void ChangeStamina(float amount)
         {
+            if (InfiniteStamina && amount < 0f) return;   // 무한 스태미나: 소모 무시
             float before = stamina;
             stamina = Mathf.Clamp(stamina + amount, 0f, maxStamina);
             if (amount < 0f) lastStaminaUseTime = Time.time;
@@ -731,6 +739,23 @@ namespace Study3D.OutPost
 
         #endregion
         
+        /// <summary> 캐릭터 선택 스탯 적용 (PlayerSpawner 가 생성 직후 호출). 스태미나는 가득 채운다. </summary>
+        // 테스트용 무한 스태미나 켜기/끄기. 켜면 바로 가득 채움
+        public void SetInfiniteStamina(bool on)
+        {
+            InfiniteStamina = on;
+            if (on) ChangeStamina(maxStamina);
+        }
+
+        public void ApplyStats(float newMoveSpeed, float newRunSpeed, float newMaxStamina)
+        {
+            moveSpeed  = newMoveSpeed;
+            runSpeed   = newRunSpeed;
+            maxStamina = newMaxStamina;
+            stamina    = maxStamina;
+            OnStaminaChanged?.Invoke(stamina, maxStamina);
+        }
+
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;

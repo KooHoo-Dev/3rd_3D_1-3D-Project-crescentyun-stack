@@ -116,7 +116,18 @@ namespace Study3D.OutPost
         private void InventoryToHotbar(InventorySlot from, int toIndex, PlayerHotbar hotbar)
         {
             InventoryItem item = from.Item;
-            if (!hotbar.CanPlace(toIndex, item)) return;
+            if (!hotbar.CanPlace(toIndex, item))
+            {
+                // 왜 안 들어가는지 Console에 표시 (디버그용)
+                string reason = item == null ? "아이템 없음"
+                    : PlayerHotbar.IsWeaponSlot(toIndex)
+                        ? (item.Type != ItemType.Weapon ? $"Type이 {item.Type} (Weapon이어야 함)"
+                           : item.GunPrefab == null ? "GunPrefab이 비어 있음" : "알 수 없음")
+                    : PlayerHotbar.IsConsumableSlot(toIndex) ? $"3~6번 칸은 Consumable만 가능 (지금 {item.Type})"
+                    : "V 칸은 고정";
+                Debug.LogWarning($"[Hotbar] '{(item != null ? item.Name : "null")}' → {toIndex}번 칸 등록 실패: {reason}", item);
+                return;
+            }
 
             // 소모품: 바로가기만 등록
             if (PlayerHotbar.IsConsumableSlot(toIndex))

@@ -92,7 +92,8 @@ namespace Study3D.OutPost
                 boundGuns[i] = gun;
                 if (slot == null) continue;
 
-                slot.SetWeapon(gun);
+                ItemStack stack = hotbar != null ? hotbar.Get(i) : null;   // 아이콘은 아이템에서
+                slot.SetWeapon(gun, stack != null ? stack.Data : null);
                 if (gun == null) continue;   // 빈 슬롯
 
                 slot.SetAmmo(gun.CurrentAmmo, gun.ReserveAmmo);
