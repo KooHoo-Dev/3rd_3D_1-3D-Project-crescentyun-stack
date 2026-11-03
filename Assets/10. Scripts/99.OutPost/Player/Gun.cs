@@ -12,8 +12,10 @@ namespace Study3D.OutPost
         [SerializeField] private string weaponName = "AssaultRifle";
         [SerializeField] private Sprite icon;
         [SerializeField] private bool isAutomatic = true;   // true: 누르고 있으면 연사, false: 클릭마다 한 발
+        [Tooltip("한 번 장전할 때 들어가는 탄 (소총 30, 권총 6)")]
         [SerializeField] private int magazineSize = 30;
-        [SerializeField] private int reserveAmmo = 90;
+        [Tooltip("재장전할 때 인벤토리에서 꺼내 쓸 탄약 종류")]
+        [SerializeField] private AmmoType ammoType = AmmoType.Rifle;
         [SerializeField] private float reloadTime = 2f;
         [SerializeField] private float fireInterval = 0.1f;
         [SerializeField] private Transform muzzle;
@@ -37,13 +39,22 @@ namespace Study3D.OutPost
         public string WeaponName => weaponName;
         public Sprite Icon => icon;
         public int MagazineSize => magazineSize;
+        public AmmoType AmmoType => ammoType;
 
         public bool IsAutomatic => isAutomatic;
         
         public event System.Action<int, int> OnAmmoChanged;   // (탄창, 예비)
         
         public int CurrentAmmo => currentAmmo;
-        public int ReserveAmmo => reserveAmmo;
+        // 예비 탄약 = 인벤토리에 있는 같은 종류 탄약 전체
+        public int ReserveAmmo => InventorySystem.IsInitialized ? InventorySystem.Instance.CountAmmo(ammoType) : 0;
+
+        // 장착할 때 아이템에 저장돼 있던 탄창 수로 맞춥니다. (-1 = 처음 장착 → 가득)
+        public void SetMagazine(int ammo)
+        {
+            currentAmmo = ammo < 0 ? magazineSize : Mathf.Clamp(ammo, 0, magazineSize);
+            OnAmmoChanged?.Invoke(currentAmmo, ReserveAmmo);
+        }
         public bool IsReloading => isReloading;
 
         private void Awake()
@@ -56,18 +67,19 @@ namespace Study3D.OutPost
             if (isReloading && Time.time >= reloadEndTime) FinishReload();
         }
 
-        // 탄창에 필요한 만큼만 예비 탄약에서 옮겨 담습니다.
+        // 탄창에 필요한 만큼만 인벤토리의 탄약에서 꺼내 담습니다.
         private void FinishReload()
         {
             int need = magazineSize - currentAmmo;          // 채워야 할 양 (예: 30 - 12 = 18)
-            int amount = Mathf.Min(need, reserveAmmo);      // 예비 탄약이 부족하면 있는 만큼만
+            int amount = InventorySystem.IsInitialized      // 탄약이 부족하면 있는 만큼만
+                ? InventorySystem.Instance.ConsumeAmmo(ammoType, need)
+                : 0;
             currentAmmo += amount;
-            reserveAmmo -= amount;
             isReloading = false;
 
-            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
+            OnAmmoChanged?.Invoke(currentAmmo, ReserveAmmo);
             
-            Debug.Log($"재장전 완료: {currentAmmo} / {reserveAmmo}");
+            Debug.Log($"재장전 완료: {currentAmmo} / {ReserveAmmo}");
         }
         
         
@@ -81,9 +93,9 @@ namespace Study3D.OutPost
             nextFireTime = Time.time + fireInterval;    // 다음 발사 가능 시각 예약
             currentAmmo--;
 
-            OnAmmoChanged?.Invoke(currentAmmo, reserveAmmo);
+            OnAmmoChanged?.Invoke(currentAmmo, ReserveAmmo);
             
-            Debug.Log($"발사! {currentAmmo} / {reserveAmmo}");
+            Debug.Log($"발사! {currentAmmo} / {ReserveAmmo}");
 
             // 총구 위치에서, 커서 방향을 바라보게 생성
             Bullet bullet = Instantiate(bulletPrefab, muzzle.position, Quaternion.LookRotation(direction));
@@ -97,7 +109,7 @@ namespace Study3D.OutPost
         {
             if (isReloading) return false;                 // 이미 재장전 중
             if (currentAmmo >= magazineSize) return false; // 탄창이 가득 참
-            if (reserveAmmo <= 0) return false;            // 예비 탄약이 없음
+            if (ReserveAmmo <= 0) return false;            // 인벤토리에 맞는 탄약이 없음
 
             isReloading = true;
             reloadEndTime = Time.time + reloadTime;        // nextFireTime과 같은 예약 방식

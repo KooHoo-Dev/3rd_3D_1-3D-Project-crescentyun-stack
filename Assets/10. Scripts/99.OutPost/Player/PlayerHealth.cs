@@ -68,6 +68,16 @@ namespace Study3D.OutPost
             
         }
         
+        // 소모품 사용 시 회복
+        public void Heal(float amount)
+        {
+            if (IsDead || amount <= 0f) return;
+
+            hp = Mathf.Min(hp + amount, maxHp);
+            OnHpChanged?.Invoke(hp, maxHp);
+            Debug.Log($"회복 +{amount} (HP: {hp})");
+        }
+        
         [ContextMenu("Respawn")]
         public void Respawn()
         {

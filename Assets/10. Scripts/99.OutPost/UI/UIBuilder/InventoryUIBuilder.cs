@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 #if UNITY_EDITOR
@@ -28,16 +29,16 @@ namespace Study3D.OutPost
         private const string RootName = "Inventory UI";
         private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
 
-        // 인벤토리 (6열 x 12행 = 72칸, 스크롤)
-        private const int InventoryCapacity = 72;
-        private const int InventoryUsed = 51;
+        // 인벤토리 (6열 x 6행 = 36칸)
+        private const int InventoryCapacity = 36;   // 6열 x 6행
+        private const int InventoryUsed = 0;   // 실제 아이템은 로직이 채움
         private const int InventoryColumns = 6;
         private const float InventoryCell = 66f;
         private const float InventorySpacing = 6f;
 
         // 루팅 창 (4열 x 2행 = 8칸)
         private const int LootCapacity = 8;
-        private const int LootUsed = 5;
+        private const int LootUsed = 0;        // 실제 아이템은 로직이 채움
         private const int LootColumns = 4;
         private const float LootCell = 92f;
         private const float LootSpacing = 8f;
@@ -100,13 +101,19 @@ namespace Study3D.OutPost
 
             Transform canvas = CreateCanvas();
 
-            CreateInventory(canvas);
-            CreateWeight(canvas);
-            CreateHotbar(canvas);
-            GameObject loot = CreateLoot(canvas);
+            // F로 열고 닫는 창: 인벤토리 + 무게 + 루팅을 하나로 묶는다
+            // Hotbar(장착 칸)도 인벤토리 창의 일부라 같이 열고 닫는다. 플레이 중 보이는 퀵슬롯은 MainUI 쪽에 따로 있다.
+            GameObject window = NewUI("InventoryWindow", canvas);
+            Stretch((RectTransform)window.transform, 0f);
 
-            // 루팅 창은 상자를 열 때만 보이므로 처음엔 숨김
-            loot.SetActive(false);
+            GameObject inventory = CreateInventory(window.transform);
+            CreateWeight(window.transform);
+            HotbarView hotbar = CreateHotbar(window.transform);
+            GameObject loot = CreateLoot(window.transform);
+            GameObject prompt = CreateInteractPrompt(canvas);
+            Image dragCursor = CreateDragCursor(canvas);   // 가장 마지막 = 가장 위에 그려짐
+
+            WireLogic(canvas.gameObject, window, inventory, loot, prompt, hotbar, dragCursor);
 
             Undo.RegisterCreatedObjectUndo(canvas.gameObject, "Build Main UI");
             EditorSceneManager.MarkSceneDirty(gameObject.scene);
@@ -176,7 +183,10 @@ namespace Study3D.OutPost
 #endif
             if (!hasEventSystem)
             {
-                Debug.LogWarning("[MainUIBuilder] 씬에 EventSystem 이 없습니다. 버튼/드래그 입력을 받으려면 추가하세요.");
+                // 새 Input System용 EventSystem 생성 (슬롯 클릭에 필요)
+                var es = new GameObject("EventSystem", typeof(EventSystem), typeof(InputSystemUIInputModule));
+                SceneManager.MoveGameObjectToScene(es, gameObject.scene);
+                Undo.RegisterCreatedObjectUndo(es, "Create EventSystem");
             }
 
             return root.transform;
@@ -186,10 +196,13 @@ namespace Study3D.OutPost
 
         #region 인벤토리 (좌측 상단)
 
-        private void CreateInventory(Transform canvas)
+        private GameObject CreateInventory(Transform canvas)
         {
             const float panelWidth = 460f;
-            const float panelHeight = 940f;
+            // 칸 수에 맞춰 높이 자동 계산: 헤더(104) + 그리드 + 패딩(위아래 5) + 아래 여백(12)
+            int inventoryRows = Mathf.CeilToInt(InventoryCapacity / (float)InventoryColumns);
+            float gridHeight = inventoryRows * InventoryCell + (inventoryRows - 1) * InventorySpacing + 10f;
+            float panelHeight = 104f + gridHeight + 12f;
 
             // 패널: 좌측 상단 고정 (기존 Equipment 자리부터 시작)
             GameObject panel = NewPanel("InventoryPanel", canvas, new Vector2(panelWidth, panelHeight));
@@ -219,7 +232,7 @@ namespace Study3D.OutPost
                   new Vector2(0f, -56f), new Vector2(-24f, 40f));
 
             TMP_Text title = NewText("InventoryTitle", header.transform,
-                                     $"Inventory ({InventoryUsed}/{InventoryCapacity})", 26f, TextAlignmentOptions.Left);
+                                     "Inventory", 26f, TextAlignmentOptions.Left);
             StretchWithOffset(title.rectTransform, 0f, 110f, 0f, 0f);
 
             Button sortButton = NewButton("SortButton", header.transform, "Sort", out TMP_Text sortLabel);
@@ -263,12 +276,15 @@ namespace Study3D.OutPost
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
             scrollRect.scrollSensitivity = 30f;
 
-            // ── 슬롯 72칸 (앞 51칸은 아이템 있음 표시)
+            // ── 슬롯 생성 (InventoryCapacity 칸)
             for (int i = 0; i < InventoryCapacity; i++)
             {
-                CreateItemSlot($"InventorySlot_{i:00}", content.transform,
+                GameObject slot = CreateItemSlot($"InventorySlot_{i:00}", content.transform,
                                new Vector2(InventoryCell, InventoryCell), i < InventoryUsed, i);
+                AddSlotLogic(slot);
             }
+
+            return panel;
         }
 
         #endregion
@@ -315,8 +331,10 @@ namespace Study3D.OutPost
 
         #region 퀵슬롯 (하단 중앙)
 
-        private void CreateHotbar(Transform canvas)
+        private HotbarView CreateHotbar(Transform canvas)
         {
+            var hotbarSlots = new System.Collections.Generic.List<InventorySlot>();
+
             int count = HotbarKeys.Length;
             float rowInnerWidth = count * HotbarCell + (count - 1) * HotbarSpacing; // 648
             float rowWidth = rowInnerWidth + 32f;          // 좌우 패딩 16
@@ -352,6 +370,8 @@ namespace Study3D.OutPost
             {
                 GameObject slot = CreateItemSlot($"HotbarSlot_{key}", row.transform,
                                                  new Vector2(HotbarCell, HotbarCell), false, 0);
+                AddSlotLogic(slot);   // 드래그가 이 칸을 찾을 수 있도록 InventorySlot 부착
+                hotbarSlots.Add(slot.GetComponent<InventorySlot>());
 
                 // 슬롯 아래 키 표시
                 GameObject badge = NewPanel("KeyBadge", slot.transform, new Vector2(28f, 22f));
@@ -364,6 +384,37 @@ namespace Study3D.OutPost
                 TMP_Text keyText = NewText("KeyText", badge.transform, key, 16f, TextAlignmentOptions.Center);
                 Stretch(keyText.rectTransform, 0f);
             }
+
+            // Hotbar 칸들을 PlayerHotbar 데이터와 연결하는 View (1 · 2 · V · 3 · 4 · 5 · 6 순서)
+            var view = root.AddComponent<HotbarView>();
+            var so = new SerializedObject(view);
+            SerializedProperty slotsProp = so.FindProperty("slots");
+            slotsProp.arraySize = hotbarSlots.Count;
+            for (int i = 0; i < hotbarSlots.Count; i++)
+                slotsProp.GetArrayElementAtIndex(i).objectReferenceValue = hotbarSlots[i];
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            return view;
+        }
+
+        #endregion
+
+        #region 드래그 커서
+
+        /// <summary> 드래그 중 마우스를 따라다니는 아이콘 (클릭을 막지 않도록 Raycast Target 끔) </summary>
+        private Image CreateDragCursor(Transform canvas)
+        {
+            GameObject cursor = NewPanel("DragCursor", canvas, new Vector2(HotbarCell, HotbarCell) * 0.85f);
+            Place(cursor, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                  Vector2.zero, new Vector2(HotbarCell, HotbarCell) * 0.85f);
+
+            Image image = cursor.GetComponent<Image>();
+            image.color = new Color(1f, 1f, 1f, 0.85f);
+            image.preserveAspect = true;
+            image.raycastTarget = false;
+
+            cursor.SetActive(false);
+            return image;
         }
 
         #endregion
@@ -385,7 +436,7 @@ namespace Study3D.OutPost
 
             // 큰 제목
             TMP_Text title = NewText("LootTitle", root.transform,
-                                     $"Loot ({LootUsed}/{LootCapacity})", 44f, TextAlignmentOptions.Left);
+                                     "Loot", 44f, TextAlignmentOptions.Left);
             Place(title.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
                   Vector2.zero, new Vector2(0f, titleHeight));
             title.fontStyle = FontStyles.Bold;
@@ -397,7 +448,7 @@ namespace Study3D.OutPost
             box.GetComponent<Image>().color = PanelColor;
 
             TMP_Text header = NewText("LootHeader", box.transform,
-                                      $"Loot ({LootUsed}/{LootCapacity})", 22f, TextAlignmentOptions.Left);
+                                      $"{LootCapacity} Slots", 22f, TextAlignmentOptions.Left);
             Place(header.gameObject, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f),
                   new Vector2(0f, -12f), new Vector2(-48f, 36f));
 
@@ -416,11 +467,121 @@ namespace Study3D.OutPost
 
             for (int i = 0; i < LootCapacity; i++)
             {
-                CreateItemSlot($"LootSlot_{i}", gridObj.transform,
+                GameObject slot = CreateItemSlot($"LootSlot_{i}", gridObj.transform,
                                new Vector2(LootCell, LootCell), i < LootUsed, i + 2);
+                AddSlotLogic(slot);
             }
 
             return root;
+        }
+
+        #endregion
+
+        #region 상호작용 안내 ("F 루팅")
+
+        private GameObject CreateInteractPrompt(Transform canvas)
+        {
+            GameObject panel = NewPanel("InteractPrompt", canvas, new Vector2(160f, 44f));
+            Place(panel, new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
+                  new Vector2(0f, -120f), new Vector2(160f, 44f));
+            Image image = panel.GetComponent<Image>();
+            image.color = PanelColor;
+            image.raycastTarget = false;
+
+            TMP_Text text = NewText("PromptText", panel.transform, "[F] 루팅", 22f, TextAlignmentOptions.Center);
+            Stretch(text.rectTransform, 0f);
+
+            panel.SetActive(false);
+            return panel;
+        }
+
+        #endregion
+
+        #region 로직 연결 (InventorySystem / Inventory / InventorySlot / PlayerInteractor)
+
+        /// <summary> 슬롯에 InventorySlot + 탐색 진행 게이지를 붙이고 연결 </summary>
+        private void AddSlotLogic(GameObject slot)
+        {
+            Image icon = slot.transform.Find("ItemIcon").GetComponent<Image>();
+            icon.color = Color.white;   // 실제 아이콘 스프라이트를 쓰므로 흰색으로
+
+            // 탐색 진행 게이지 (원형으로 차오름)
+            GameObject progress = NewPanel("SearchProgress", slot.transform, Vector2.zero);
+            Stretch((RectTransform)progress.transform, 0f);
+            Image progressImage = progress.GetComponent<Image>();
+            progressImage.sprite = AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/UISprite.psd");
+            progressImage.type = Image.Type.Filled;
+            progressImage.fillMethod = Image.FillMethod.Radial360;
+            progressImage.fillOrigin = (int)Image.Origin360.Top;
+            progressImage.fillClockwise = true;
+            progressImage.fillAmount = 0f;
+            progressImage.color = new Color(1f, 1f, 1f, 0.35f);
+            progressImage.raycastTarget = false;
+            progressImage.enabled = false;
+
+            var slotComp = slot.AddComponent<InventorySlot>();
+            var so = new SerializedObject(slotComp);
+            so.FindProperty("<Content>k__BackingField").objectReferenceValue = icon;
+            so.FindProperty("searchProgress").objectReferenceValue = progressImage;
+            so.FindProperty("countText").objectReferenceValue = slot.transform.Find("CountText").GetComponent<TMP_Text>();
+            so.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private void WireLogic(GameObject root, GameObject window, GameObject inventoryPanel,
+                               GameObject lootPanel, GameObject prompt, HotbarView hotbarView, Image dragCursor)
+        {
+            Inventory player = AddInventory(inventoryPanel, "Player", InventoryType.Player,
+                                            InventoryCapacity / InventoryColumns, InventoryColumns);
+            Inventory loot = AddInventory(lootPanel, "Loot", InventoryType.None,
+                                          Mathf.CeilToInt(LootCapacity / (float)LootColumns), LootColumns);
+
+            var system = root.AddComponent<InventorySystem>();
+            var so = new SerializedObject(system);
+            so.FindProperty("inventoryUI").objectReferenceValue = window;
+            so.FindProperty("playerInventory").objectReferenceValue = player;
+            so.FindProperty("lootInventory").objectReferenceValue = loot;
+
+            // 장착/바로가기 데이터 (UI 루트는 항상 켜져 있으므로 창이 닫혀도 값 유지)
+            var hotbarData = root.AddComponent<PlayerHotbar>();
+            so.FindProperty("hotbar").objectReferenceValue = hotbarData;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            Debug.LogWarning("[InventoryUIBuilder] PlayerHotbar의 Default Melee에 기본 근접무기 아이템(Type = Melee)을 넣어 주세요.", hotbarData);
+
+            // 드래그 입력
+            var input = root.AddComponent<InventoryInput>();
+            var inputSo = new SerializedObject(input);
+            inputSo.FindProperty("cursorIcon").objectReferenceValue = dragCursor;
+            inputSo.FindProperty("hotbarView").objectReferenceValue = hotbarView;
+            inputSo.ApplyModifiedPropertiesWithoutUndo();
+
+            // 씬에 PlayerInteractor가 있으면 안내 UI 자동 연결
+#if UNITY_2022_2_OR_NEWER
+            var interactor = FindFirstObjectByType<PlayerInteractor>();
+#else
+            var interactor = FindObjectOfType<PlayerInteractor>();
+#endif
+            if (interactor != null)
+            {
+                var iso = new SerializedObject(interactor);
+                iso.FindProperty("promptUI").objectReferenceValue = prompt;
+                iso.ApplyModifiedProperties();
+            }
+            else
+            {
+                Debug.LogWarning("[InventoryUIBuilder] 씬에 PlayerInteractor가 없어 InteractPrompt를 연결하지 못했습니다. 플레이어에 붙인 뒤 직접 연결하세요.");
+            }
+        }
+
+        private Inventory AddInventory(GameObject panel, string invName, InventoryType type, int rows, int columns)
+        {
+            var inv = panel.AddComponent<Inventory>();
+            var so = new SerializedObject(inv);
+            so.FindProperty("<Name>k__BackingField").stringValue = invName;
+            so.FindProperty("Type").enumValueIndex = (int)type;
+            so.FindProperty("<SizeRow>k__BackingField").intValue = rows;
+            so.FindProperty("<SizeColumn>k__BackingField").intValue = columns;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return inv;
         }
 
         #endregion

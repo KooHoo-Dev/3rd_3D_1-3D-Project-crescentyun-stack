@@ -1,67 +1,110 @@
-﻿using UnityEngine;
+using System;
+using TMPro;
+using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Study3D.OutPost
 {
-    public class InventorySlot : MonoBehaviour
+    public class InventorySlot : MonoBehaviour, IPointerClickHandler,
+        IBeginDragHandler, IDragHandler, IEndDragHandler
     {
-        //  Slot은 내부에 Content라고 부르는 Image GameObject를
-        // 제어하는 기능을 가집니다.
-        // - 외부에서 특정 아이템을 설정하거나, 빈 Slot으로 만들 수도 있습니다.
-        // - Cursor Slot의 경우에는 마우스의 위치를 따라다녀야 함으로
-        //  위치를 설정하는 기능도 필요합니다
+        //  Slot은 내부에 Content라고 부르는 Image GameObject를 제어합니다.
+        // - 외부에서 아이템 묶음(ItemStack) 설정 / 비우기, 개수 표시
+        // - 루팅 슬롯은 "미확인(회색)" 상태와 탐색 진행도 표시
+        // - 드래그 입력은 부모 캔버스의 InventoryInput에 넘김
+        //   (슬롯이 직접 드래그를 받아야 ScrollRect가 드래그를 가로채지 않음)
 
-        [field:SerializeField] public Image Content { get; private set; }
+        [field: SerializeField] public Image Content { get; private set; }
+        [SerializeField] private TMP_Text countText;
 
-        private RectTransform rectTransform;
-        private InventoryItem item;
+        [Tooltip("탐색 진행도 표시용 Image (Image Type = Filled). 없어도 됨")]
+        [SerializeField] private Image searchProgress;
+        [SerializeField] private Color hiddenColor = new Color(0.25f, 0.25f, 0.25f, 1f);
 
-        public bool IsEmpty => (item == null);
-        // 위와 아래는 동일합니다
-        //public bool IsEmpty { get { return item == null; } }
+        private ItemStack stack;
+        private bool searched = true;
+        private InventoryInput dragInput;
 
-        public InventoryItem Item => item;
-        // 위의 표현은 Item을 호출하면 멤버변수 item을 반환하겠다는
-        // 람다식 표현입니다. 읽기 전용으로 반환되어서 Set은 불가합니다.
+        /// <summary> 내용(아이템/개수)이 바뀌면 호출 </summary>
+        public event Action<InventorySlot> OnChanged;
 
-        private void Start()
+        public ItemStack Stack => stack;
+        public InventoryItem Item => stack != null ? stack.Data : null;
+        public bool IsEmpty => stack == null || stack.Data == null || stack.Count <= 0;
+
+        // 꺼진 상태에서 먼저 넣어 둔 값도 처음 켜질 때 그대로 그려지도록, 여기서는 그리기만 한다.
+        private void Awake()
         {
-            SetItem(null); // 임시 초기화 코드
-
-            rectTransform = GetComponent<RectTransform>();
-            // 아래의 표현도 됩니다.
-            //rectTransform = transform as RectTransform;
-            // as : 타입을 캐스팅하는 키워드입니다. 
+            Draw();
         }
 
         /// <summary>
-        /// Null을 허용하는 함수입니다. Null 전달시 슬롯이 비워집니다.
+        /// 묶음을 넣는다. null이면 비운다.
+        /// searched == false 이면 회색(미확인)으로 표시.
+        /// notify == false 이면 알림 없이 바꾼다 (두 칸을 교환할 때 중간 상태를 알리지 않기 위함).
         /// </summary>
-        /// <param name="inputItem"></param>
-        public void SetItem(InventoryItem inputItem)
+        public void SetStack(ItemStack inputStack, bool isSearched = true, bool notify = true)
         {
-            // inputItem은 Null이 들어오거나, 실제 InventoryItem 객체가 들어옵니다
-            item = inputItem;
+            stack = inputStack;
+            searched = isSearched;
+            SetSearchProgress(0f);
+            Refresh(notify);
+        }
 
-            if(item == null) // item이 없는 경우
+        public void Clear(bool notify = true) => SetStack(null, true, notify);
+
+        /// <summary> 개수를 직접 바꾼 뒤 호출. 0개가 되면 칸을 비운다. </summary>
+        public void Refresh(bool notify = true)
+        {
+            if (IsEmpty) stack = null;
+            Draw();
+            if (notify) OnChanged?.Invoke(this);
+        }
+
+        private void Draw()
+        {
+            if (Content == null) return;
+
+            if (stack == null)
             {
-                Content.sprite = null;      // 이미지의 sprite를 비워준다
-                Content.enabled = false;    // 이미지의 활성화를 off한다.
+                Content.sprite = null;
+                Content.enabled = false;
+                if (countText != null) countText.text = "";
+                return;
             }
-            else // item이 있는 경우
+
+            Content.sprite = stack.Data.Icon;
+            Content.color = searched ? Color.white : hiddenColor;
+            Content.enabled = true;
+            if (countText != null) countText.text = stack.Count > 1 ? stack.Count.ToString() : "";
+        }
+
+        public void SetSearchProgress(float t)
+        {
+            if (searchProgress == null) return;
+            searchProgress.enabled = t > 0f;
+            searchProgress.fillAmount = t;
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left) return;
+            InventorySystem.Instance.OnSlotClicked(this);
+        }
+
+        // ───────── 드래그: InventoryInput에 전달 ─────────
+        private InventoryInput DragInput
+        {
+            get
             {
-                Content.sprite = item.Icon; // 이미지의 sprite를 item.Icon으로 설정
-                Content.enabled = true;     // 이미지의 활성화를 on한다.
+                if (dragInput == null) dragInput = GetComponentInParent<InventoryInput>();
+                return dragInput;
             }
         }
 
-        // 외부에서 위치값을 입력받아서 Slot의 위치를 갱신합니다.
-        // Cursor 슬롯 전용 함수입니다.
-        public void SetPosition(Vector2 inputPosition)
-        {
-            rectTransform.anchoredPosition = inputPosition;
-        }
-
-            
+        public void OnBeginDrag(PointerEventData eventData) { if (DragInput != null) DragInput.BeginDrag(this, eventData); }
+        public void OnDrag(PointerEventData eventData)      { if (DragInput != null) DragInput.Drag(eventData); }
+        public void OnEndDrag(PointerEventData eventData)   { if (DragInput != null) DragInput.EndDrag(eventData); }
     }
 }
